@@ -152,37 +152,25 @@ class EphemeralMod(loader.Module):
                 continue
         raise ValueError(f"cannot resolve peer: {value}")
 
-    async def _send(self, chat, receiver, html: str, reply_to=None) -> bool:
+    async def _send(self, chat, receiver, html: str) -> bool:
         client = self._bot_client()
         if client is None:
             return False
 
         try:
             from herokutl.tl.functions.ephemeral import SendMessageRequest
-            from herokutl.tl.types import (
-                InputReplyToEphemeralMessage,
-                InputReplyToMessage,
-                InputRichMessageHTML,
-            )
+            from herokutl.tl.types import InputRichMessageHTML
         except Exception:
             return False
 
         peer = await self._resolve_peer(client, chat)
         user = await self._resolve_peer(client, receiver)
 
-        reply = None
-        if reply_to is not None:
-            try:
-                reply = InputReplyToEphemeralMessage(id=reply_to)
-            except Exception:
-                reply = InputReplyToMessage(reply_to_msg_id=reply_to)
-
         await client(
             SendMessageRequest(
                 peer=peer,
                 receiver_id=user,
                 message="",
-                reply_to=reply,
                 rich_message=InputRichMessageHTML(html=html),
             )
         )
@@ -236,16 +224,12 @@ class EphemeralMod(loader.Module):
                     self.strings["no_user"].format(utils.escape_html(user_ref)),
                 )
                 return
-
-            reply_to = None
         else:
             chat_ref = message.chat_id
             if reply is not None and reply.sender_id:
                 user_ref = reply.sender_id
-                reply_to = reply.id
             else:
                 user_ref = message.sender_id
-                reply_to = None
 
         if not text:
             if reply is not None:
@@ -259,7 +243,6 @@ class EphemeralMod(loader.Module):
                 chat_ref,
                 user_ref,
                 utils.escape_html(text),
-                reply_to=reply_to,
             )
         except Exception as e:
             logger.exception("eph failed")
