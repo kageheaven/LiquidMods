@@ -203,6 +203,7 @@ class EphemeralMod(loader.Module):
 
     @loader.command()
     async def eph(self, message: Message):
+        """<text> — ephemeral message, visible only to the author of the replied message"""
         raw = (utils.get_args_raw(message) or "").strip()
         parts = raw.split(maxsplit=2)
         reply = await message.get_reply_message()
